@@ -8,6 +8,9 @@
     "require": {
         "google/apiclient": "^2.0.0@RC"
     },
+    "require-dev": {
+        "google/apiclient": "^2.0.0@RC"
+    },
     "authors": [
         {
             "name": "Marcin \"WRonX\" Wronka",
