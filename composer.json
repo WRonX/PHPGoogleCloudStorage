@@ -1,0 +1,24 @@
+{
+    "name": "wronx/php-google-cloud-storage",
+    "type": "library",
+    "description": "A simple PHP class to perform basic actions on Google Cloud Storage files",
+    "keywords": ["php", "google", "cloud", "storage"],
+    "homepage": "https://github.com/WRonX/PHPGoogleCloudStorage",
+    "license":"WTFPL",
+    "require": {
+        "google/apiclient": "^2.0.0@RC"
+    },
+    "authors": [
+        {
+            "name": "Marcin \"WRonX\" Wronka",
+            "email": "wronx@wronx.net",
+            "homepage": "http://wronx.net",
+            "role": "Developer"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+             "WRonX\\Utils\\Google\\": "src/"
+        }
+    }
+}
