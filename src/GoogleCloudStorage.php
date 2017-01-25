@@ -1,4 +1,13 @@
 <?php
+/**
+ * Google Cloud Storage Helper
+ *
+ * Copyright © 2017 WRonX <wronx[at]wronx.net>
+ * This work is free. You can redistribute it and/or modify it under the
+ * terms of the Do What The Fuck You Want To Public License, Version 2,
+ * as published by Sam Hocevar. See http://www.wtfpl.net/ for more details.
+ */
+
 namespace WRonX\Utils\Google;
 
 use Google_Client;
@@ -127,15 +136,17 @@ class GoogleCloudStorage
         
         if($contentOnly)
             return $response->getBody();
-        
+
+        $headers = array(
+            'Content-Type' => $response->getHeaders()['Content-Type'],
+            'Content-Transfer-Encoding' => 'Binary',
+            'Content-disposition' => 'attachment; filename=' . preg_replace("/[^A-Za-z0-9]\./", '_', $downloadFileName),
+        );
+
         return new Response(
             $response->getBody(),
             Response::HTTP_OK,
-            array(
-                'Content-Type' => $response->getHeaders()['Content-Type'],
-                'Content-Transfer-Encoding' => 'Binary',
-                'Content-disposition' => 'attachment; filename=' . preg_replace("/[^A-Za-z0-9]/", '_', $downloadFileName),
-            )
+            $headers
         );
     }
     
@@ -216,7 +227,42 @@ class GoogleCloudStorage
         
         return $this->googleStorageObject->size;
     }
-    
+
+    /**
+     * @param      $path
+     * @param bool $namesOnly
+     * @return array
+     */
+    public function listFiles($path, $namesOnly = true)
+    {
+        // TODO: remove first (?) element equal to $path
+        $path = rtrim($path, '/') . '/';
+        if($path == '/')
+            $path = '';
+
+        $options = [
+            'delimiter' => '/',
+            'prefix' => $path,
+        ];
+
+        $objects = $this->googleStorageService->objects->listObjects($this->bucketName, $options);
+
+        if($namesOnly)
+        {
+            $objects['items'] = array_map(
+                function($attributes)
+                {
+                    return $attributes['name'];
+                }
+                , $objects['items']);
+        }
+
+        return [
+            'dirs' => $objects['prefixes'],
+            'files' => $objects['items'],
+        ];
+    }
+
     /**
      * @param $sourceFileName string
      * @param $targetFileName string
@@ -225,7 +271,7 @@ class GoogleCloudStorage
     {
         $newGoogleStorageObject = new Google_Service_Storage_StorageObject();
         $newGoogleStorageObject->setName($targetFileName);
-        
+
         $this->googleStorageService->objects->insert(
             $this->getBucketName(),
             $newGoogleStorageObject,
@@ -233,7 +279,6 @@ class GoogleCloudStorage
                 'data' => file_get_contents($sourceFileName),
                 'mimeType' => mime_content_type($sourceFileName),
                 'uploadType' => 'multipart',
-                'predefinedAcl' => 'authenticatedRead',
             )
         );
     }
